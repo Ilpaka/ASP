@@ -1,0 +1,36 @@
+@model DashboardAdmin.Models.DashboardCard
+
+@* Partial-представление карточки. Только типизированная модель, ViewBag запрещён. *@
+
+@functions {
+    // Текст тренда (метод из @functions внутри partial)
+    string GetTrendLabel(DashboardAdmin.Models.Trend t) => t switch
+    {
+        DashboardAdmin.Models.Trend.Up => "Рост",
+        DashboardAdmin.Models.Trend.Down => "Снижение",
+        _ => "Стабильно"
+    };
+
+    // Доп. уровень «Лёгкий»: классификация значения
+    string GetValueClass(decimal value)
+    {
+        if (value < 0) return "Отрицательное";
+        if (value < 1000) return "Низкое";
+        if (value <= 10000) return "Среднее";
+        return "Высокое";
+    }
+}
+
+<div class="metric-card">
+    <h4>@Model.Title</h4>
+    <div class="metric-value @(Model.Value < 0 ? "neg" : "")">
+        @Model.Value @Model.Unit
+    </div>
+    <div>Тренд: @GetTrendLabel(Model.Trend)</div>
+    <div><small class="text-muted">Категория: @GetValueClass(Model.Value)</small></div>
+    @if (Model.Value < 0)
+    {
+        <span class="badge bg-danger">Отрицательное значение</span>
+    }
+    <p class="mt-2 mb-0"><small>@Model.Description</small></p>
+</div>

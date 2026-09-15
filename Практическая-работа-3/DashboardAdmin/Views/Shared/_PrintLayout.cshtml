@@ -1,0 +1,14 @@
+@{
+    // Режим печати: вкладывается в _Layout, но без боковой панели —
+    // только основное содержимое (@RenderBody). Секции, объявленные в Index
+    // (PageHeader, Actions, Scripts), на печати не нужны — явно игнорируем их,
+    // иначе Razor выдаст ошибку «section defined but not rendered».
+    Layout = "_Layout";
+    if (IsSectionDefined("PageHeader")) { IgnoreSection("PageHeader"); }
+    if (IsSectionDefined("Actions")) { IgnoreSection("Actions"); }
+    if (IsSectionDefined("Scripts")) { IgnoreSection("Scripts"); }
+}
+
+<div class="print-area">
+    @RenderBody()
+</div>

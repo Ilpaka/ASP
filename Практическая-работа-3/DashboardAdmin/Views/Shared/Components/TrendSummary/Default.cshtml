@@ -1,0 +1,30 @@
+@model List<DashboardAdmin.Models.TrendSummaryItem>
+
+@functions {
+    string TrendName(DashboardAdmin.Models.Trend t) => t switch
+    {
+        DashboardAdmin.Models.Trend.Up => "Рост",
+        DashboardAdmin.Models.Trend.Down => "Снижение",
+        _ => "Стабильно"
+    };
+}
+
+<h5>Сводка по трендам</h5>
+
+@if (!Model.Any())
+{
+    <p class="text-muted">Нет данных</p>
+}
+else
+{
+    <ul class="list-unstyled mb-0">
+        @foreach (var s in Model)
+        {
+            <li class="mb-2">
+                <strong>@TrendName(s.Trend)</strong><br />
+                Карточек: @s.Count<br />
+                Сумма: @s.Sum
+            </li>
+        }
+    </ul>
+}

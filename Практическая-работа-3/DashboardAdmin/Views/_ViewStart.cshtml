@@ -1,0 +1,6 @@
+@{
+    // Задание 2.3 + доп. уровень «Средний»: динамический выбор layout.
+    // Если контроллер передал Mode == "Print" — упрощённый _PrintLayout,
+    // иначе — основной двухколоночный _AppLayout.
+    Layout = (ViewData["Mode"] as string) == "Print" ? "_PrintLayout" : "_AppLayout";
+}

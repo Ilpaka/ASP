@@ -1,0 +1,143 @@
+@model IEnumerable<DashboardAdmin.Models.DashboardCard>
+@{
+    ViewData["Title"] = "Дашборд";
+
+    // Локальные переменные (Задание 3, блок @{ } в начале)
+    var totalValue = Model.Sum(c => c.Value);
+    var cardCount = Model.Count();
+}
+
+<!-- Админ-дашборд v1.0 -->
+
+@functions {
+    // Текст по тренду (Задание 3)
+    string GetTrendLabel(DashboardAdmin.Models.Trend t) => t switch
+    {
+        DashboardAdmin.Models.Trend.Up => "Рост",
+        DashboardAdmin.Models.Trend.Down => "Снижение",
+        _ => "Стабильно"
+    };
+
+    // Среднее значение (используется в шаблонном делегате renderSummary — сложный уровень)
+    decimal GetAverage(IEnumerable<DashboardAdmin.Models.DashboardCard> cards)
+        => cards.Any() ? cards.Average(c => c.Value) : 0m;
+}
+
+@* Секция заголовка страницы — попадёт в _Layout вместо дефолтного «Панель управления» *@
+@section PageHeader {
+    <h1>Дашборд</h1>
+    @* Данные за период из контроллера *@
+    <p class="text-muted mb-0">
+        @cardCount показателей, сумма: @totalValue @ViewBag.Currency
+        · период: @ViewData["ReportPeriod"]
+    </p>
+}
+
+@* Секция действий (доп. уровень «Средний») — кнопка печати *@
+@section Actions {
+    <a class="btn btn-outline-primary btn-sm" href="/Dashboard/Print">🖨 Печать</a>
+}
+
+<h3>Способ 1 — цикл + partial</h3>
+<p class="text-muted">Часть карточек выводится напрямую в цикле, часть — через partial-представление.</p>
+
+<div class="card-grid">
+    @{ int i = 0; }
+    @foreach (var card in Model)
+    {
+        @* Счётчик в цикле: перенос строки каждые 3 карточки *@
+        if (i > 0 && i % 3 == 0)
+        {
+            <div style="flex-basis:100%; height:0;"></div>
+        }
+
+        if (i % 2 == 0)
+        {
+            @* --- напрямую в цикле --- *@
+            <div class="metric-card">
+                <h4>@card.Title</h4>
+                <div class="metric-value @(card.Value < 0 ? "neg" : "")">
+                    @card.Value @card.Unit
+                    @if (card.Trend == DashboardAdmin.Models.Trend.Up)
+                    {
+                        <text>↑</text>
+                    }
+                    else if (card.Trend == DashboardAdmin.Models.Trend.Down)
+                    {
+                        <text>↓</text>
+                    }
+                    else
+                    {
+                        <text>→</text>
+                    }
+                </div>
+                <div>Тренд: @GetTrendLabel(card.Trend)</div>
+                @if (card.Value < 0)
+                {
+                    <span class="badge bg-danger">Отрицательное значение</span>
+                }
+                <p class="mt-2 mb-0"><small>@card.Description</small></p>
+            </div>
+        }
+        else
+        {
+            @* --- через partial (типизированная модель) --- *@
+            @await Html.PartialAsync("_DashboardCard", card)
+        }
+
+        i++;
+    }
+</div>
+
+<h3 class="mt-4">Способ 2 — шаблонный Razor-делегат</h3>
+
+@{
+    // Сложный уровень: шаблонный делегат для рендеринга карточки.
+    // Неявный параметр внутри шаблона называется item.
+    Func<DashboardAdmin.Models.DashboardCard, Microsoft.AspNetCore.Html.IHtmlContent> renderCard =
+        @<div class="metric-card">
+            <h4>@item.Title</h4>
+            <p class="mb-1">@item.Value @item.Unit — @GetTrendLabel(item.Trend)</p>
+            @if (item.Value < 0)
+            {
+                <span class="badge bg-danger">Отрицательное значение</span>
+            }
+        </div>;
+
+    // Второй делегат — сводка по коллекции (использует GetAverage из @functions)
+    Func<IEnumerable<DashboardAdmin.Models.DashboardCard>, Microsoft.AspNetCore.Html.IHtmlContent> renderSummary =
+        @<div class="alert alert-secondary mt-3">
+            <strong>Сводка (через делегат):</strong>
+            карточек — @item.Count(),
+            сумма — @item.Sum(c => c.Value),
+            среднее — @GetAverage(item)
+        </div>;
+}
+
+<div class="card-grid">
+    @foreach (var card in Model)
+    {
+        @renderCard(card)
+    }
+</div>
+
+@* Сводка после цикла (Задание 3) *@
+<div class="mt-4">
+    <p class="mb-1">Всего карточек: <strong>@cardCount</strong></p>
+    <p class="mb-0">Сумма значений: <strong>@totalValue</strong></p>
+</div>
+
+@* Вызов второго делегата *@
+@renderSummary(Model)
+
+@*
+    Шаблонный делегат vs partial:
+    - partial (_DashboardCard.cshtml) — отдельный .cshtml-файл, компилируется как
+      самостоятельное представление, переиспользуется в разных местах проекта, может
+      иметь свой @functions и логику. Дороже по вызову (поиск и рендеринг view).
+    - шаблонный делегат — локальная inline-переменная типа Func<T, IHtmlContent>,
+      объявленная прямо в представлении. Виден только здесь, быстрый, удобен для
+      небольшого повторяющегося куска разметки в пределах одной страницы.
+    Partial — когда разметку надо переиспользовать между страницами; делегат — когда
+    это локальный помощник рендеринга внутри одного представления.
+*@
