@@ -1,0 +1,14 @@
+# Build output
+[Bb]in/
+[Oo]bj/
+*.dll
+*.pdb
+*.user
+*.suo
+
+# Visual Studio
+.vs/
+*.userprefs
+
+# macOS
+.DS_Store
