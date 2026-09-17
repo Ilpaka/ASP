@@ -7,6 +7,20 @@
         DashboardAdmin.Models.Trend.Down => "Снижение",
         _ => "Стабильно"
     };
+
+    string TrendIcon(DashboardAdmin.Models.Trend t) => t switch
+    {
+        DashboardAdmin.Models.Trend.Up => "▲",
+        DashboardAdmin.Models.Trend.Down => "▼",
+        _ => "■"
+    };
+
+    string TrendCss(DashboardAdmin.Models.Trend t) => t switch
+    {
+        DashboardAdmin.Models.Trend.Up => "t-up",
+        DashboardAdmin.Models.Trend.Down => "t-down",
+        _ => "t-stable"
+    };
 }
 
 <h5>Сводка по трендам</h5>
@@ -17,14 +31,19 @@
 }
 else
 {
-    <ul class="list-unstyled mb-0">
-        @foreach (var s in Model)
-        {
-            <li class="mb-2">
-                <strong>@TrendName(s.Trend)</strong><br />
-                Карточек: @s.Count<br />
-                Сумма: @s.Sum
-            </li>
-        }
-    </ul>
+    @* Каждая строка сводки — ссылка-фильтр на дашборд *@
+    @foreach (var s in Model)
+    {
+        <a class="trend-item" href="/Dashboard?trend=@s.Trend" title="Показать только «@TrendName(s.Trend)»">
+            <span class="row1">
+                <span class="nm">
+                    <span class="trend-pill @TrendCss(s.Trend)">@TrendIcon(s.Trend)</span>
+                    @TrendName(s.Trend)
+                </span>
+                <span class="cnt">@s.Count</span>
+            </span>
+            <span class="sum">Сумма: @s.Sum.ToString("N1")</span>
+        </a>
+    }
+    <a class="btn" style="width:100%; justify-content:center; margin-top:6px" href="/Dashboard">Сбросить фильтр</a>
 }

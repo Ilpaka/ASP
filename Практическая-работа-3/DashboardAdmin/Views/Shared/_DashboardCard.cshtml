@@ -11,6 +11,20 @@
         _ => "Стабильно"
     };
 
+    string GetTrendIcon(DashboardAdmin.Models.Trend t) => t switch
+    {
+        DashboardAdmin.Models.Trend.Up => "↑",
+        DashboardAdmin.Models.Trend.Down => "↓",
+        _ => "→"
+    };
+
+    string GetTrendCss(DashboardAdmin.Models.Trend t) => t switch
+    {
+        DashboardAdmin.Models.Trend.Up => "t-up",
+        DashboardAdmin.Models.Trend.Down => "t-down",
+        _ => "t-stable"
+    };
+
     // Доп. уровень «Лёгкий»: классификация значения
     string GetValueClass(decimal value)
     {
@@ -19,18 +33,41 @@
         if (value <= 10000) return "Среднее";
         return "Высокое";
     }
+
+    // Заполнение полосы = «вес» категории значения. Partial знает только свою карточку
+    // (ViewBag здесь запрещён), поэтому шкала строится от тех же порогов, что и GetValueClass.
+    int GetBarPercent(decimal value) => GetValueClass(value) switch
+    {
+        "Низкое" => 30,
+        "Среднее" => 65,
+        "Высокое" => 100,
+        _ => 100 // Отрицательное — полная полоса, но красная
+    };
 }
 
-<div class="metric-card">
-    <h4>@Model.Title</h4>
-    <div class="metric-value @(Model.Value < 0 ? "neg" : "")">
-        @Model.Value @Model.Unit
+<a class="metric-card @GetTrendCss(Model.Trend)" href="/Dashboard/Details/@Model.Id">
+    <div class="card-top">
+        <h4 class="card-title">@Model.Title</h4>
+        <span class="trend-pill @GetTrendCss(Model.Trend)">
+            @GetTrendIcon(Model.Trend) @GetTrendLabel(Model.Trend)
+        </span>
     </div>
-    <div>Тренд: @GetTrendLabel(Model.Trend)</div>
-    <div><small class="text-muted">Категория: @GetValueClass(Model.Value)</small></div>
-    @if (Model.Value < 0)
-    {
-        <span class="badge bg-danger">Отрицательное значение</span>
-    }
-    <p class="mt-2 mb-0"><small>@Model.Description</small></p>
-</div>
+
+    <div class="card-value @(Model.Value < 0 ? "neg" : "")">
+        @Model.Value.ToString("N1")<span class="unit">@Model.Unit</span>
+    </div>
+
+    <div class="bar">
+        <i class="@GetTrendCss(Model.Trend)" style="width:@GetBarPercent(Model.Value)%"></i>
+    </div>
+
+    <div style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:9px">
+        <span class="badge-soft @(Model.Value < 0 ? "badge-danger" : "")">@GetValueClass(Model.Value)</span>
+        @if (Model.Value < 0)
+        {
+            <span class="badge-soft badge-danger">Отрицательное значение</span>
+        }
+    </div>
+
+    <p class="card-desc">@Model.Description</p>
+</a>

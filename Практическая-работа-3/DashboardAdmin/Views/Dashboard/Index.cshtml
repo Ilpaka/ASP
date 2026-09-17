@@ -5,6 +5,12 @@
     // Локальные переменные (Задание 3, блок @{ } в начале)
     var totalValue = Model.Sum(c => c.Value);
     var cardCount = Model.Count();
+
+    // Состояние фильтров из контроллера
+    var curTrend = ViewBag.Trend as string ?? "all";
+    var curSort = ViewBag.Sort as string ?? "id";
+    var curQuery = ViewBag.Query as string;
+    var isPrint = (ViewData["Mode"] as string) == "Print";
 }
 
 <!-- Админ-дашборд v1.0 -->
@@ -18,117 +24,263 @@
         _ => "Стабильно"
     };
 
+    string GetTrendIcon(DashboardAdmin.Models.Trend t) => t switch
+    {
+        DashboardAdmin.Models.Trend.Up => "↑",
+        DashboardAdmin.Models.Trend.Down => "↓",
+        _ => "→"
+    };
+
+    string GetTrendCss(DashboardAdmin.Models.Trend t) => t switch
+    {
+        DashboardAdmin.Models.Trend.Up => "t-up",
+        DashboardAdmin.Models.Trend.Down => "t-down",
+        _ => "t-stable"
+    };
+
+    string GetValueClass(decimal value)
+    {
+        if (value < 0) return "Отрицательное";
+        if (value < 1000) return "Низкое";
+        if (value <= 10000) return "Среднее";
+        return "Высокое";
+    }
+
+    int GetBarPercent(decimal value) => GetValueClass(value) switch
+    {
+        "Низкое" => 30,
+        "Среднее" => 65,
+        _ => 100
+    };
+
     // Среднее значение (используется в шаблонном делегате renderSummary — сложный уровень)
     decimal GetAverage(IEnumerable<DashboardAdmin.Models.DashboardCard> cards)
         => cards.Any() ? cards.Average(c => c.Value) : 0m;
+
+    // Сборка ссылки с сохранением состояния фильтров
+    string BuildUrl(string trend, string sort, string? q)
+    {
+        var parts = new List<string>();
+        if (trend != "all") parts.Add("trend=" + Uri.EscapeDataString(trend));
+        if (sort != "id") parts.Add("sort=" + Uri.EscapeDataString(sort));
+        if (!string.IsNullOrWhiteSpace(q)) parts.Add("q=" + Uri.EscapeDataString(q));
+        return "/Dashboard" + (parts.Count > 0 ? "?" + string.Join("&", parts) : "");
+    }
+}
+
+@{
+    // === Сложный уровень: шаблонные Razor-делегаты ===
+    // Неявный параметр внутри шаблона называется item.
+
+    // 1) Делегат рендеринга одной карточки — используется в цикле ВМЕСТО partial
+    Func<DashboardAdmin.Models.DashboardCard, Microsoft.AspNetCore.Html.IHtmlContent> renderCard =
+        @<div class="compact-row">
+            <span class="name">
+                <a href="/Dashboard/Details/@item.Id">@item.Title</a>
+                @if (item.Value < 0)
+                {
+                    <span class="badge-soft badge-danger" style="margin-left:6px">Отрицательное значение</span>
+                }
+            </span>
+            <span class="num @(item.Value < 0 ? "neg" : "")">@item.Value.ToString("N1") @item.Unit</span>
+            <span class="trend-pill @GetTrendCss(item.Trend)">@GetTrendIcon(item.Trend) @GetTrendLabel(item.Trend)</span>
+        </div>;
+
+    // 2) Делегат сводки по коллекции — использует GetAverage из @functions
+    Func<IEnumerable<DashboardAdmin.Models.DashboardCard>, Microsoft.AspNetCore.Html.IHtmlContent> renderSummary =
+        @<div class="summary-bar">
+            <div class="item">
+                <div class="k">Карточек</div>
+                <div class="v">@item.Count()</div>
+            </div>
+            <div class="item">
+                <div class="k">Сумма значений</div>
+                <div class="v">@item.Sum(c => c.Value).ToString("N1")</div>
+            </div>
+            <div class="item">
+                <div class="k">Среднее</div>
+                <div class="v">@GetAverage(item).ToString("N1")</div>
+            </div>
+            <div class="item">
+                <div class="k">Максимум</div>
+                <div class="v">@item.Max(c => c.Value).ToString("N1")</div>
+            </div>
+        </div>;
 }
 
 @* Секция заголовка страницы — попадёт в _Layout вместо дефолтного «Панель управления» *@
 @section PageHeader {
-    <h1>Дашборд</h1>
-    @* Данные за период из контроллера *@
-    <p class="text-muted mb-0">
-        @cardCount показателей, сумма: @totalValue @ViewBag.Currency
-        · период: @ViewData["ReportPeriod"]
-    </p>
+    <div class="page-head">
+        <div>
+            <h1>Дашборд</h1>
+            @* Данные за период из контроллера *@
+            <p class="sub">
+                @cardCount показателей · сумма: <strong>@totalValue.ToString("N1")</strong> @ViewBag.Currency
+                · период: @ViewData["ReportPeriod"]
+            </p>
+        </div>
+    </div>
 }
 
 @* Секция действий (доп. уровень «Средний») — кнопка печати *@
 @section Actions {
-    <a class="btn btn-outline-primary btn-sm" href="/Dashboard/Print">🖨 Печать</a>
+    <a class="btn btn-primary" href="/Dashboard/Print">🖨 Версия для печати</a>
 }
 
-<h3>Способ 1 — цикл + partial</h3>
-<p class="text-muted">Часть карточек выводится напрямую в цикле, часть — через partial-представление.</p>
+@if (!isPrint)
+{
+    <!-- Панель инструментов: фильтр по тренду, сортировка, поиск -->
+    <div class="toolbar no-print">
+        <div class="toolbar-group">
+            <span class="toolbar-label">Тренд</span>
+            <a class="chip @(curTrend == "all" ? "active" : "")" href="@BuildUrl("all", curSort, curQuery)">
+                Все <span class="count">@ViewBag.CountAll</span>
+            </a>
+            <a class="chip @(curTrend.Equals("Up", StringComparison.OrdinalIgnoreCase) ? "active" : "")" href="@BuildUrl("Up", curSort, curQuery)">
+                ↑ Рост <span class="count">@ViewBag.CountUp</span>
+            </a>
+            <a class="chip @(curTrend.Equals("Down", StringComparison.OrdinalIgnoreCase) ? "active" : "")" href="@BuildUrl("Down", curSort, curQuery)">
+                ↓ Снижение <span class="count">@ViewBag.CountDown</span>
+            </a>
+            <a class="chip @(curTrend.Equals("Stable", StringComparison.OrdinalIgnoreCase) ? "active" : "")" href="@BuildUrl("Stable", curSort, curQuery)">
+                → Стабильно <span class="count">@ViewBag.CountStable</span>
+            </a>
+        </div>
 
-<div class="card-grid">
-    @{ int i = 0; }
-    @foreach (var card in Model)
-    {
-        @* Счётчик в цикле: перенос строки каждые 3 карточки *@
-        if (i > 0 && i % 3 == 0)
-        {
-            <div style="flex-basis:100%; height:0;"></div>
-        }
+        <div class="toolbar-group">
+            <span class="toolbar-label">Сортировка</span>
+            <a class="chip @(curSort == "id" ? "active" : "")" href="@BuildUrl(curTrend, "id", curQuery)">По порядку</a>
+            <a class="chip @(curSort == "value_desc" ? "active" : "")" href="@BuildUrl(curTrend, "value_desc", curQuery)">Значение ↓</a>
+            <a class="chip @(curSort == "value_asc" ? "active" : "")" href="@BuildUrl(curTrend, "value_asc", curQuery)">Значение ↑</a>
+            <a class="chip @(curSort == "title" ? "active" : "")" href="@BuildUrl(curTrend, "title", curQuery)">По названию</a>
+        </div>
 
-        if (i % 2 == 0)
-        {
-            @* --- напрямую в цикле --- *@
-            <div class="metric-card">
-                <h4>@card.Title</h4>
-                <div class="metric-value @(card.Value < 0 ? "neg" : "")">
-                    @card.Value @card.Unit
-                    @if (card.Trend == DashboardAdmin.Models.Trend.Up)
-                    {
-                        <text>↑</text>
-                    }
-                    else if (card.Trend == DashboardAdmin.Models.Trend.Down)
-                    {
-                        <text>↓</text>
-                    }
-                    else
-                    {
-                        <text>→</text>
-                    }
-                </div>
-                <div>Тренд: @GetTrendLabel(card.Trend)</div>
-                @if (card.Value < 0)
-                {
-                    <span class="badge bg-danger">Отрицательное значение</span>
-                }
-                <p class="mt-2 mb-0"><small>@card.Description</small></p>
-            </div>
-        }
-        else
-        {
-            @* --- через partial (типизированная модель) --- *@
-            @await Html.PartialAsync("_DashboardCard", card)
-        }
-
-        i++;
-    }
-</div>
-
-<h3 class="mt-4">Способ 2 — шаблонный Razor-делегат</h3>
-
-@{
-    // Сложный уровень: шаблонный делегат для рендеринга карточки.
-    // Неявный параметр внутри шаблона называется item.
-    Func<DashboardAdmin.Models.DashboardCard, Microsoft.AspNetCore.Html.IHtmlContent> renderCard =
-        @<div class="metric-card">
-            <h4>@item.Title</h4>
-            <p class="mb-1">@item.Value @item.Unit — @GetTrendLabel(item.Trend)</p>
-            @if (item.Value < 0)
+        <form class="search" method="get" action="/Dashboard">
+            <input type="hidden" name="trend" value="@curTrend" />
+            <input type="hidden" name="sort" value="@curSort" />
+            <input type="text" name="q" value="@curQuery" placeholder="Поиск по показателям…" />
+            <button class="btn" type="submit">Найти</button>
+            @if (!string.IsNullOrWhiteSpace(curQuery))
             {
-                <span class="badge bg-danger">Отрицательное значение</span>
+                <a class="btn" href="@BuildUrl(curTrend, curSort, null)">Сброс</a>
             }
-        </div>;
-
-    // Второй делегат — сводка по коллекции (использует GetAverage из @functions)
-    Func<IEnumerable<DashboardAdmin.Models.DashboardCard>, Microsoft.AspNetCore.Html.IHtmlContent> renderSummary =
-        @<div class="alert alert-secondary mt-3">
-            <strong>Сводка (через делегат):</strong>
-            карточек — @item.Count(),
-            сумма — @item.Sum(c => c.Value),
-            среднее — @GetAverage(item)
-        </div>;
+        </form>
+    </div>
 }
 
-<div class="card-grid">
-    @foreach (var card in Model)
-    {
-        @renderCard(card)
-    }
+@* KPI-полоса: агрегаты по текущей выборке *@
+<div class="kpi-row">
+    <div class="kpi">
+        <div class="label">Показателей</div>
+        <div class="val">@cardCount<small>из @ViewBag.CountAll</small></div>
+    </div>
+    <div class="kpi">
+        <div class="label">Сумма значений</div>
+        <div class="val">@totalValue.ToString("N1")<small>@ViewBag.Currency</small></div>
+    </div>
+    <div class="kpi">
+        <div class="label">Среднее</div>
+        <div class="val">@GetAverage(Model).ToString("N1")</div>
+    </div>
+    <div class="kpi">
+        <div class="label">Отрицательных</div>
+        <div class="val">@Model.Count(c => c.Value < 0)</div>
+    </div>
 </div>
 
-@* Сводка после цикла (Задание 3) *@
-<div class="mt-4">
-    <p class="mb-1">Всего карточек: <strong>@cardCount</strong></p>
-    <p class="mb-0">Сумма значений: <strong>@totalValue</strong></p>
-</div>
+@if (!Model.Any())
+{
+    <div class="empty">
+        <div class="ico">🔍</div>
+        <h3 style="margin:10px 0 4px">Ничего не найдено</h3>
+        <p style="margin:0">Попробуйте изменить фильтр или поисковый запрос.</p>
+        <a class="btn btn-primary" style="margin-top:14px" href="/Dashboard">Сбросить всё</a>
+    </div>
+}
+else
+{
+    <div class="section-title">Показатели</div>
 
-@* Вызов второго делегата *@
-@renderSummary(Model)
+    <div class="card-grid">
+        @{ int i = 0; }
+        @foreach (var card in Model)
+        {
+            @* Счётчик в цикле: перенос строки каждые 3 карточки *@
+            if (i > 0 && i % 3 == 0)
+            {
+                <div class="grid-break"></div>
+            }
+
+            if (i % 2 == 0)
+            {
+                @* --- напрямую в цикле --- *@
+                <a class="metric-card @GetTrendCss(card.Trend)" href="/Dashboard/Details/@card.Id">
+                    <div class="card-top">
+                        <h4 class="card-title">@card.Title</h4>
+                        <span class="trend-pill @GetTrendCss(card.Trend)">
+                            @if (card.Trend == DashboardAdmin.Models.Trend.Up)
+                            {
+                                <text>↑</text>
+                            }
+                            else if (card.Trend == DashboardAdmin.Models.Trend.Down)
+                            {
+                                <text>↓</text>
+                            }
+                            else
+                            {
+                                <text>→</text>
+                            }
+                            @GetTrendLabel(card.Trend)
+                        </span>
+                    </div>
+
+                    <div class="card-value @(card.Value < 0 ? "neg" : "")">
+                        @card.Value.ToString("N1")<span class="unit">@card.Unit</span>
+                    </div>
+
+                    <div class="bar">
+                        <i class="@GetTrendCss(card.Trend)" style="width:@GetBarPercent(card.Value)%"></i>
+                    </div>
+
+                    <div style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:9px">
+                        <span class="badge-soft @(card.Value < 0 ? "badge-danger" : "")">@GetValueClass(card.Value)</span>
+                        @if (card.Value < 0)
+                        {
+                            <span class="badge-soft badge-danger">Отрицательное значение</span>
+                        }
+                    </div>
+
+                    <p class="card-desc">@card.Description</p>
+                </a>
+            }
+            else
+            {
+                @* --- через partial (типизированная модель) --- *@
+                @await Html.PartialAsync("_DashboardCard", card)
+            }
+
+            i++;
+        }
+    </div>
+
+    <div class="section-title">Компактный вид — шаблонный Razor-делегат</div>
+
+    <div class="compact-list">
+        @foreach (var card in Model)
+        {
+            @renderCard(card)
+        }
+    </div>
+
+    @* Сводка после цикла (Задание 3) *@
+    <div class="section-title">Итоги</div>
+    <p class="sub" style="margin:0 0 10px">
+        Всего карточек: <strong>@cardCount</strong> · Сумма значений: <strong>@totalValue.ToString("N1")</strong>
+    </p>
+
+    @* Вызов второго делегата *@
+    @renderSummary(Model)
+}
 
 @*
     Шаблонный делегат vs partial:

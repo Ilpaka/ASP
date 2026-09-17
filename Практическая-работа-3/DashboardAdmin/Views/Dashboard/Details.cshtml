@@ -1,0 +1,105 @@
+@model DashboardAdmin.Models.DashboardCard
+@{
+    ViewData["Title"] = Model.Title;
+    var latest = ViewBag.Latest as List<DashboardAdmin.Models.DashboardCard>
+                 ?? new List<DashboardAdmin.Models.DashboardCard>();
+}
+
+@functions {
+    string GetTrendLabel(DashboardAdmin.Models.Trend t) => t switch
+    {
+        DashboardAdmin.Models.Trend.Up => "Рост",
+        DashboardAdmin.Models.Trend.Down => "Снижение",
+        _ => "Стабильно"
+    };
+
+    string GetTrendIcon(DashboardAdmin.Models.Trend t) => t switch
+    {
+        DashboardAdmin.Models.Trend.Up => "↑",
+        DashboardAdmin.Models.Trend.Down => "↓",
+        _ => "→"
+    };
+
+    string GetTrendCss(DashboardAdmin.Models.Trend t) => t switch
+    {
+        DashboardAdmin.Models.Trend.Up => "t-up",
+        DashboardAdmin.Models.Trend.Down => "t-down",
+        _ => "t-stable"
+    };
+
+    string GetValueClass(decimal value)
+    {
+        if (value < 0) return "Отрицательное";
+        if (value < 1000) return "Низкое";
+        if (value <= 10000) return "Среднее";
+        return "Высокое";
+    }
+}
+
+@* Секция PageHeader здесь определена — заголовок страницы свой.
+   А вот секцию Actions намеренно НЕ определяем: в _Layout стоит проверка
+   IsSectionDefined("Actions"), поэтому блок действий просто не выводится. *@
+@section PageHeader {
+    <div class="page-head">
+        <div>
+            <p class="sub" style="margin:0 0 4px">
+                <a href="/Dashboard">← Назад к дашборду</a>
+            </p>
+            <h1>@Model.Title</h1>
+            <p class="sub">Показатель #@Model.Id · период: @ViewData["ReportPeriod"]</p>
+        </div>
+    </div>
+}
+
+<div class="detail-card">
+    <span class="trend-pill @GetTrendCss(Model.Trend)">
+        @GetTrendIcon(Model.Trend) @GetTrendLabel(Model.Trend)
+    </span>
+
+    <div class="detail-value @(Model.Value < 0 ? "neg" : "")">
+        @Model.Value.ToString("N1") <span style="font-size:20px; color:var(--text-muted)">@Model.Unit</span>
+    </div>
+
+    @if (Model.Value < 0)
+    {
+        <span class="badge-soft badge-danger">Отрицательное значение</span>
+    }
+
+    <p class="card-desc" style="font-size:14px; margin-top:14px">@Model.Description</p>
+
+    <div class="detail-grid">
+        <div class="cell">
+            <div class="k">Динамика</div>
+            <div class="v">@GetTrendLabel(Model.Trend)</div>
+        </div>
+        <div class="cell">
+            <div class="k">Категория значения</div>
+            <div class="v">@GetValueClass(Model.Value)</div>
+        </div>
+        <div class="cell">
+            <div class="k">Единица измерения</div>
+            <div class="v">@Model.Unit</div>
+        </div>
+        <div class="cell">
+            <div class="k">Валюта отчёта</div>
+            <div class="v">@ViewBag.Currency</div>
+        </div>
+    </div>
+
+    <div style="margin-top:22px; display:flex; gap:9px; flex-wrap:wrap">
+        <a class="btn btn-primary" href="/Dashboard">К списку показателей</a>
+        <a class="btn" href="/Dashboard?trend=@Model.Trend">Все с трендом «@GetTrendLabel(Model.Trend)»</a>
+    </div>
+</div>
+
+@if (latest.Any())
+{
+    <div class="section-title">Другие показатели</div>
+    <div class="card-grid">
+        @foreach (var card in latest)
+        {
+            @* Переиспользуем тот же partial, что и на дашборде *@
+            @await Html.PartialAsync("_DashboardCard", card)
+        }
+    </div>
+}

@@ -4,50 +4,47 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] — Админ-панель</title>
-    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="~/css/site.css" />
-    <style>
-        .admin-header { background:#1f2937; color:#fff; padding:12px 20px; }
-        .admin-header a { color:#cbd5e1; margin-left:16px; text-decoration:none; }
-        .admin-header a:hover { color:#fff; }
-        .page-header { border-bottom:2px solid #e5e7eb; margin:16px 0; padding-bottom:8px; }
-        .card-grid { display:flex; flex-wrap:wrap; gap:16px; }
-        .metric-card { border:1px solid #e5e7eb; border-radius:10px; padding:16px; min-width:220px; flex:1; background:#fff; }
-        .metric-card h4 { margin:0 0 6px; font-size:15px; color:#374151; }
-        .metric-value { font-size:22px; font-weight:700; }
-        .sidebar { background:#f9fafb; border:1px solid #e5e7eb; border-radius:10px; padding:16px; }
-        .neg { color:#dc2626; }
-        footer.admin-footer { margin-top:32px; padding:16px 20px; color:#6b7280; border-top:1px solid #e5e7eb; }
-    </style>
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <script>
+        // Тема применяется до отрисовки, чтобы не было «моргания» светлой темы
+        (function () {
+            try {
+                var t = localStorage.getItem("admin-theme");
+                if (t) document.documentElement.setAttribute("data-theme", t);
+            } catch (e) { }
+        })();
+    </script>
 </head>
 <body>
-    <header class="admin-header d-flex justify-content-between align-items-center">
-        <strong>⚙️ Админ-панель</strong>
-        <nav>
-            <a href="/Dashboard">Дашборд</a>
+    <header class="topbar no-print">
+        <a href="/Dashboard" class="brand">
+            <span class="brand-mark">◆</span>
+            <span>Админ-панель</span>
+        </a>
+        <nav class="topnav">
+            <a href="/Dashboard" class="active">Дашборд</a>
             <a href="#">Настройки</a>
+            <button type="button" class="theme-toggle" id="themeToggle" title="Сменить тему">◐</button>
         </nav>
     </header>
 
-    <div class="container-fluid px-4">
+    <div class="shell">
         @* Условный заголовок страницы: своя секция PageHeader либо дефолт *@
         @if (IsSectionDefined("PageHeader"))
         {
-            <div class="page-header">
-                @await RenderSectionAsync("PageHeader")
-            </div>
+            @await RenderSectionAsync("PageHeader")
         }
         else
         {
-            <div class="page-header">
-                <h1>Панель управления</h1>
+            <div class="page-head">
+                <div><h1>Панель управления</h1></div>
             </div>
         }
 
         @* Кастомные действия страницы (кнопка «Печать» и т.п.) — доп. уровень «Средний» *@
         @if (IsSectionDefined("Actions"))
         {
-            <div class="mb-3">
+            <div class="no-print" style="margin-bottom:18px">
                 @await RenderSectionAsync("Actions")
             </div>
         }
@@ -57,12 +54,22 @@
         </main>
     </div>
 
-    <footer class="admin-footer">
+    <footer class="footer">
         &copy; @DateTime.Now.Year Админ-панель
     </footer>
 
-    <script src="~/lib/jquery/dist/jquery.min.js"></script>
-    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        (function () {
+            var btn = document.getElementById("themeToggle");
+            if (!btn) return;
+            btn.addEventListener("click", function () {
+                var root = document.documentElement;
+                var next = root.getAttribute("data-theme") === "dark" ? "light" : "dark";
+                root.setAttribute("data-theme", next);
+                try { localStorage.setItem("admin-theme", next); } catch (e) { }
+            });
+        })();
+    </script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

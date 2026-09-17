@@ -3,7 +3,7 @@
     Layout = "_Layout";
 }
 
-@* Пробрасываем секции из представления (Index) в базовый _Layout.
+@* Пробрасываем секции из представления в базовый _Layout.
    Условно — чтобы в _Layout сохранился дефолтный заголовок, когда PageHeader не задан. *@
 @if (IsSectionDefined("PageHeader"))
 {
@@ -18,12 +18,12 @@
     @section Scripts { @await RenderSectionAsync("Scripts") }
 }
 
-<div class="row">
-    <div class="col-md-9">
+<div class="layout-grid">
+    <div>
         @* Основная область *@
         @RenderBody()
     </div>
-    <div class="col-md-3">
+    <div class="no-print">
         <aside class="sidebar">
             @* Боковая панель — ViewComponent со сводкой по трендам *@
             @await Component.InvokeAsync("TrendSummary")
