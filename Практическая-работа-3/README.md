@@ -17,21 +17,30 @@
 
 ```bash
 cd DashboardAdmin
-dotnet run
+dotnet run --urls "http://localhost:5080"
 ```
 
-Открыть <http://localhost:5000/> (дашборд) и <http://localhost:5000/Dashboard/Print> (печать).
+Открыть <http://localhost:5080/> (дашборд) и <http://localhost:5080/Dashboard/Print> (печать).
+(Порт 5080, а не 5000 — на macOS 5000 занят AirPlay Receiver.)
 
 ## Запуск без установленного .NET (через Docker)
 
 Из папки `Практическая-работа-3`:
 
 ```bash
-docker run --rm -it -p 5000:5000 \
-  -e ASPNETCORE_URLS=http://+:5000 -e ASPNETCORE_ENVIRONMENT=Development \
+docker run --rm -it -p 5080:5000 \
+  -e ASPNETCORE_ENVIRONMENT=Development \
   -v "$PWD/DashboardAdmin":/app -w /app \
-  mcr.microsoft.com/dotnet/sdk:8.0 dotnet run
+  mcr.microsoft.com/dotnet/sdk:8.0 \
+  dotnet run --no-launch-profile --urls "http://0.0.0.0:5000"
 ```
+
+Открыть <http://localhost:5080/> и <http://localhost:5080/Dashboard/Print>.
+
+> Порт снаружи — 5080, потому что на macOS порт 5000 занят системным AirPlay Receiver.
+> Флаги обязательны: `--no-launch-profile` отключает профиль из `launchSettings.json`
+> (иначе он перебивает адрес), а `--urls http://0.0.0.0:5000` заставляет слушать все
+> интерфейсы контейнера — на `localhost` снаружи достучаться нельзя.
 
 ## Структура
 

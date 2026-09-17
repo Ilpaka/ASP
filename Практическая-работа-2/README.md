@@ -16,43 +16,50 @@
 
 ```bash
 cd TaskBoard
-dotnet run
+dotnet run --urls "http://localhost:5080"
 ```
 
-Открыть <http://localhost:5000/tasks>.
+Открыть <http://localhost:5080/tasks>.
+(Порт 5080, а не 5000 — на macOS 5000 занят AirPlay Receiver.)
 
 ## Запуск без установленного .NET (через Docker)
 
 Из папки `Практическая-работа-2`:
 
 ```bash
-docker run --rm -it -p 5000:5000 \
-  -e ASPNETCORE_URLS=http://+:5000 -e ASPNETCORE_ENVIRONMENT=Development \
+docker run --rm -it -p 5080:5000 \
+  -e ASPNETCORE_ENVIRONMENT=Development \
   -v "$PWD/TaskBoard":/app -w /app \
-  mcr.microsoft.com/dotnet/sdk:8.0 dotnet run
+  mcr.microsoft.com/dotnet/sdk:8.0 \
+  dotnet run --no-launch-profile --urls "http://0.0.0.0:5000"
 ```
 
-Открыть <http://localhost:5000/tasks>.
+Открыть <http://localhost:5080/tasks>.
+
+> Порт снаружи — 5080, потому что на macOS порт 5000 занят системным AirPlay Receiver.
+> Флаги обязательны: `--no-launch-profile` отключает профиль из `launchSettings.json`
+> (иначе он перебивает адрес), а `--urls http://0.0.0.0:5000` заставляет слушать все
+> интерфейсы контейнера — на `localhost` снаружи достучаться нельзя.
 
 ## Проверка API через терминал
 
 ```bash
 # без ключа -> 401
-curl http://localhost:5000/tasks/api/list
+curl http://localhost:5080/tasks/api/list
 
 # список (с ключом)
-curl -H "X-Api-Key: secret123" http://localhost:5000/tasks/api/list
+curl -H "X-Api-Key: secret123" http://localhost:5080/tasks/api/list
 
 # создание
-curl -X POST http://localhost:5000/tasks/api/create \
+curl -X POST http://localhost:5080/tasks/api/create \
   -H "X-Api-Key: secret123" -H "Content-Type: application/json" \
   -d '{"title":"Тест через curl","description":"Создано из терминала"}'
 
 # по ID
-curl -H "X-Api-Key: secret123" http://localhost:5000/tasks/api/1
+curl -H "X-Api-Key: secret123" http://localhost:5080/tasks/api/1
 
 # health-check (short-circuit)
-curl http://localhost:5000/health   # -> healthy
+curl http://localhost:5080/health   # -> healthy
 ```
 
 ## Структура
