@@ -1,0 +1,27 @@
+@{
+    ViewData["Title"] = "Спасибо за заказ";
+    var total = TempData["OrderTotal"] as string;
+    var count = TempData["OrderCount"];
+}
+
+<h1 class="page-title">Спасибо за заказ!</h1>
+<p class="page-subtitle">Мы уже начали собирать вашу посылку</p>
+
+@await Html.PartialAsync("_AlertPartial", new ShopFront.Models.AlertMessage
+{
+    Type = "success",
+    Text = "Заказ успешно оформлен. Подтверждение отправлено на вашу почту."
+})
+
+<div class="card shadow-sm mx-auto" style="max-width: 520px;">
+    <div class="card-body text-center">
+        <div class="display-6 mb-3">✅</div>
+        @if (total != null)
+        {
+            <p class="mb-1 text-muted">Сумма заказа</p>
+            <p class="price-now text-primary mb-3">@total</p>
+            <p class="text-muted small">Товаров в заказе: @count шт.</p>
+        }
+        <a href="/Catalog" class="btn btn-primary mt-2">Вернуться в каталог</a>
+    </div>
+</div>

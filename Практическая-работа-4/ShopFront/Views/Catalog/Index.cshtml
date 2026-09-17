@@ -1,0 +1,53 @@
+@model List<ShopFront.Models.Product>
+@{
+    ViewData["Title"] = "Каталог";
+    var currentTag = ViewBag.Tag as string ?? "all";
+    var categories = ViewBag.Categories as List<string> ?? new List<string>();
+}
+
+<h1 class="page-title">Каталог товаров</h1>
+<p class="page-subtitle">Витрина на Bootstrap: сетка, карточки, бейджи и состояния</p>
+
+@if (TempData["Added"] is string addedName)
+{
+    @await Html.PartialAsync("_AlertPartial", new ShopFront.Models.AlertMessage
+    {
+        Type = "success",
+        Text = $"Товар «{addedName}» добавлен в корзину"
+    })
+}
+
+@* === Средний уровень: тег-фильтр на pill-кнопках Bootstrap === *@
+<div class="tag-filter d-flex flex-wrap gap-2 justify-content-center mb-4">
+    <a href="/Catalog"
+       class="btn btn-sm rounded-pill @(currentTag == "all" ? "btn-primary active" : "btn-outline-secondary")">
+        Все товары
+    </a>
+    @foreach (var cat in categories)
+    {
+        <a href="/Catalog?tag=@Uri.EscapeDataString(cat)"
+           class="btn btn-sm rounded-pill @(currentTag == cat ? "btn-primary active" : "btn-outline-secondary")">
+            @cat
+        </a>
+    }
+</div>
+
+@* === Задание 3: контейнер + row + адаптивные колонки ===
+   Мобильные — 1 карточка в ряд, планшеты — 2, десктоп — 3. *@
+@if (!Model.Any())
+{
+    <div class="alert alert-warning text-center" role="alert">
+        В этой категории пока нет товаров.
+    </div>
+}
+else
+{
+    <div class="row g-4">
+        @foreach (var product in Model)
+        {
+            <div class="col-12 col-md-6 col-lg-4">
+                @await Html.PartialAsync("_ProductCard", product)
+            </div>
+        }
+    </div>
+}
