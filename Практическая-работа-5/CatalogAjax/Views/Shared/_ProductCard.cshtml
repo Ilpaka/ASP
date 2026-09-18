@@ -1,0 +1,81 @@
+@model CatalogAjax.Models.Product
+
+@{
+    // Динамические классы и состояния UI через Razor (из прошлой практики)
+    var isBigSale = Model.DiscountPercent > 30;
+
+    var borderClass = !Model.InStock ? "border-danger"
+                    : isBigSale ? "border-success"
+                    : "border-light-subtle";
+
+    var shadowClass = Model.IsHit ? "shadow" : "shadow-sm";
+    var stateClass = (!Model.InStock ? " is-out" : "") + (isBigSale ? " is-bigsale" : "");
+}
+
+<div class="card product-card border @borderClass @shadowClass@stateClass h-100">
+
+    @* Клик по картинке/названию открывает модалку с деталями (сложный уровень).
+       data-product-id читается в JS через dataset.productId *@
+    <div class="position-relative product-open" role="button" tabindex="0"
+         data-product-id="@Model.Id" title="Подробнее о товаре">
+        <img src="@Model.ImageUrl" class="card-img-top img-fluid product-img" alt="@Model.Name" />
+
+        <div class="position-absolute top-0 start-0 p-2 d-flex flex-column gap-1">
+            @if (!Model.InStock)
+            {
+                <span class="badge text-bg-danger">Нет в наличии</span>
+            }
+            else if (Model.IsHit)
+            {
+                <span class="badge text-bg-warning text-dark">ХИТ</span>
+            }
+
+            @if (isBigSale)
+            {
+                <span class="badge text-bg-success">Большая скидка</span>
+            }
+            else if (Model.DiscountPercent > 0)
+            {
+                <span class="badge text-bg-primary">Скидка @Model.DiscountPercent%</span>
+            }
+        </div>
+    </div>
+
+    <div class="card-body d-flex flex-column">
+        <span class="badge text-bg-light text-muted align-self-start mb-2">@Model.Category</span>
+
+        <h5 class="card-title product-open" role="button" tabindex="0" data-product-id="@Model.Id">
+            @Model.Name
+        </h5>
+        <p class="card-text text-muted small flex-grow-1">@Model.Description</p>
+
+        @* Адаптивная таблица цен *@
+        <ul class="list-group list-group-flush mb-3">
+            <li class="list-group-item px-0 py-1 d-md-flex justify-content-between align-items-center border-0">
+                <span class="text-muted small">Цена</span>
+                <span class="price-now text-primary">@Model.Price.ToString("C0")</span>
+            </li>
+            @if (Model.OldPrice.HasValue)
+            {
+                <li class="list-group-item px-0 py-1 d-md-flex justify-content-between align-items-center border-0">
+                    <span class="text-muted small">Без скидки</span>
+                    <span class="price-old">@Model.OldPrice.Value.ToString("C0")</span>
+                </li>
+            }
+        </ul>
+
+        @if (Model.InStock)
+        {
+            @* Задание 2.2: кнопка с классом add-to-cart и data-product-id — их ищет cart.js *@
+            <button type="button" class="btn btn-primary w-100 add-to-cart" data-product-id="@Model.Id">
+                В корзину
+            </button>
+            <div class="form-text mt-1">На складе: @Model.Stock шт.</div>
+        }
+        else
+        {
+            <button type="button" class="btn btn-secondary w-100" disabled>Нет в наличии</button>
+            <div class="form-text mt-1">Ожидаем поступление</div>
+        }
+    </div>
+</div>

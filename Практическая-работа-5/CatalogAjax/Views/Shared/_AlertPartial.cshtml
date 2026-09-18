@@ -1,0 +1,8 @@
+@model CatalogAjax.Models.AlertMessage
+
+@* Задание 4: переиспользуемый Bootstrap-alert с кнопкой закрытия.
+   Класс alert-auto подхватывается site.js для автоскрытия. *@
+<div class="alert alert-@Model.Type alert-dismissible fade show alert-auto" role="alert">
+    @Model.Text
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Закрыть"></button>
+</div>

@@ -1,0 +1,10 @@
+@model List<CatalogAjax.Models.Product>
+
+@* Partial для AJAX: отдаётся без layout — и при поиске, и при бесконечной подгрузке.
+   Содержит col-обёртки, поэтому вставляется прямо внутрь #catalogGrid (class="row"). *@
+@foreach (var product in Model)
+{
+    <div class="col-12 col-md-6 col-lg-4">
+        @await Html.PartialAsync("_ProductCard", product)
+    </div>
+}

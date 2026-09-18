@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] — Витрина товаров</title>
+
+    <environment include="Development">
+        <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.css" />
+        <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    </environment>
+    <environment exclude="Development">
+        <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+        <link rel="stylesheet" href="~/css/site.min.css" asp-append-version="true" />
+    </environment>
+</head>
+<body class="bg-body-tertiary d-flex flex-column min-vh-100">
+
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="/Catalog">
+                <span class="me-1">🛍</span> ShopFront
+            </a>
+
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#mainNav" aria-controls="mainNav"
+                    aria-expanded="false" aria-label="Открыть меню">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="mainNav">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/Catalog">Каталог</a>
+                    </li>
+                    <li class="nav-item">
+                        @* Задание 2.3: бейдж с id — его обновляет JS после AJAX-запросов *@
+                        <a class="nav-link" href="/Cart">
+                            Корзина
+                            <span class="badge bg-danger" id="cartBadge">@(ViewBag.CartCount ?? 0)</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/Admin">Админ</a>
+                    </li>
+                </ul>
+                <div class="d-flex">
+                    <button class="btn btn-outline-light btn-sm" type="button">Войти</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container py-4 flex-grow-1">
+        @RenderBody()
+    </main>
+
+    <footer class="bg-dark text-white-50 py-3 mt-auto">
+        <div class="container text-center small">
+            &copy; @DateTime.Now.Year ShopFront — AJAX-каталог
+        </div>
+    </footer>
+
+    @* Лёгкий уровень: toast-уведомление о добавлении в корзину (скрыт по умолчанию) *@
+    <div class="position-fixed top-0 end-0 p-3" style="z-index: 11">
+        <div id="cartToast" class="toast align-items-center text-white bg-success border-0" role="alert"
+             aria-live="assertive" aria-atomic="true">
+            <div class="d-flex">
+                <div class="toast-body" id="cartToastText">
+                    Товар добавлен
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto"
+                        data-bs-dismiss="toast" aria-label="Закрыть"></button>
+            </div>
+        </div>
+    </div>
+
+    @* Задание 6.1: Bootstrap и глобальный site.js — на всех страницах *@
+    <environment include="Development">
+        <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.js"></script>
+        <script src="~/js/site.js" asp-append-version="true"></script>
+    </environment>
+    <environment exclude="Development">
+        <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+        <script src="~/js/site.min.js" asp-append-version="true"></script>
+    </environment>
+
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

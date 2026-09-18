@@ -1,0 +1,35 @@
+[
+  {
+    "outputFileName": "wwwroot/css/site.min.css",
+    "inputFiles": [
+      "wwwroot/css/site.css"
+    ],
+    "minify": {
+      "enabled": true,
+      "renameFiles": true
+    }
+  },
+  {
+    "outputFileName": "wwwroot/js/site.min.js",
+    "inputFiles": [
+      "wwwroot/js/site.js"
+    ],
+    "minify": {
+      "enabled": true,
+      "renameFiles": true
+    }
+  },
+  {
+    "outputFileName": "wwwroot/js/catalog.min.js",
+    "inputFiles": [
+      "wwwroot/js/search.js",
+      "wwwroot/js/cart.js",
+      "wwwroot/js/infinite.js",
+      "wwwroot/js/product-modal.js"
+    ],
+    "minify": {
+      "enabled": true,
+      "renameFiles": true
+    }
+  }
+]

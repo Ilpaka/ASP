@@ -1,0 +1,87 @@
+/* ============================================================
+   Кастомные стили витрины.
+   Дополняют Bootstrap, но не переопределяют его базовые классы.
+   Собираются бандлером в site.min.css (см. bundleconfig.json).
+   ============================================================ */
+
+/* 1. Центрированный заголовок страницы */
+.page-title {
+    text-align: center;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    margin-bottom: 0.35rem;
+}
+
+.page-subtitle {
+    text-align: center;
+    color: #6c757d;
+    margin-bottom: 2rem;
+}
+
+/* 2. Усиленные отступы у карточек на мобильных */
+.product-card {
+    transition: transform .18s ease, box-shadow .18s ease;
+    height: 100%;
+}
+
+.product-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 .75rem 1.75rem rgba(0, 0, 0, .12) !important;
+}
+
+@media (max-width: 767.98px) {
+    .product-card {
+        margin-bottom: 1.5rem;
+    }
+}
+
+/* 3. Свой цвет для кнопки «Оформить заказ» */
+.btn-checkout {
+    background: linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%);
+    border: none;
+    color: #fff;
+    font-weight: 600;
+    letter-spacing: .3px;
+}
+
+.btn-checkout:hover,
+.btn-checkout:focus {
+    background: linear-gradient(135deg, #6d28d9 0%, #4338ca 100%);
+    color: #fff;
+}
+
+/* --- Дополнительно: состояния карточек (сложный уровень) --- */
+
+/* «Нет в наличии» — приглушаем картинку */
+.product-card.is-out .card-img-top {
+    filter: grayscale(100%);
+    opacity: .55;
+}
+
+/* «Большая скидка» — мягкое зелёное свечение */
+.product-card.is-bigsale {
+    box-shadow: 0 0 0 .15rem rgba(25, 135, 84, .18);
+}
+
+/* Картинка товара фиксированной высоты, чтобы сетка не «прыгала» */
+.product-img {
+    height: 190px;
+    object-fit: cover;
+}
+
+/* Цена крупно */
+.price-now {
+    font-size: 1.45rem;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.price-old {
+    text-decoration: line-through;
+    color: #adb5bd;
+}
+
+/* Тег-фильтр: активная «пилюля» */
+.tag-filter .btn.active {
+    font-weight: 600;
+}

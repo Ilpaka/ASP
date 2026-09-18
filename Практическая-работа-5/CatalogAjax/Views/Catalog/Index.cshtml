@@ -1,0 +1,89 @@
+@model List<CatalogAjax.Models.Product>
+@{
+    ViewData["Title"] = "Каталог";
+    var currentTag = ViewBag.Tag as string ?? "all";
+    var categories = ViewBag.Categories as List<string> ?? new List<string>();
+}
+
+<h1 class="page-title">Каталог товаров</h1>
+<p class="page-subtitle">Живой поиск, добавление в корзину и подгрузка — без перезагрузки страницы</p>
+
+@* Тег-фильтр (обычные ссылки, фильтрация на сервере) *@
+<div class="tag-filter d-flex flex-wrap gap-2 justify-content-center mb-3">
+    <a href="/Catalog"
+       class="btn btn-sm rounded-pill @(currentTag == "all" ? "btn-primary active" : "btn-outline-secondary")">
+        Все товары
+    </a>
+    @foreach (var cat in categories)
+    {
+        <a href="/Catalog?tag=@Uri.EscapeDataString(cat)"
+           class="btn btn-sm rounded-pill @(currentTag == cat ? "btn-primary active" : "btn-outline-secondary")">
+            @cat
+        </a>
+    }
+</div>
+
+@* Задание 2.1: поле поиска — его находит search.js по id *@
+<div class="row justify-content-center mb-4">
+    <div class="col-12 col-md-8 col-lg-6">
+        <div class="input-group">
+            <span class="input-group-text bg-white">🔎</span>
+            <input type="text" id="searchInput" class="form-control"
+                   placeholder="Поиск товаров..." autocomplete="off" />
+        </div>
+        <div class="form-text text-center">Начните вводить — результаты появятся автоматически</div>
+    </div>
+</div>
+
+@* Задание 2.1: контейнер сетки — сюда JS подставляет результаты поиска и новые порции *@
+<div id="catalogGrid" class="row g-4" data-tag="@currentTag">
+    @await Html.PartialAsync("_ProductList", Model)
+</div>
+
+@* Средний уровень: «сентинель» — когда он попадает в зону видимости, грузится следующая страница *@
+<div id="sentinel" style="height: 20px;"></div>
+
+<div id="loadMoreSpinner" class="text-center py-4 d-none">
+    <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Загрузка…</span>
+    </div>
+</div>
+
+<div id="endOfList" class="text-center text-muted py-4 d-none">
+    Это все товары в каталоге
+</div>
+
+@* Сложный уровень: пустая модалка — содержимое подгружается через Promise.all *@
+<div class="modal fade" id="productModal" tabindex="-1" aria-labelledby="productModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="productModalLabel">Информация о товаре</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+            </div>
+            <div class="modal-body" id="modalBody">
+                <div class="text-center py-5">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Загрузка…</span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@* Задание 6.2: скрипты каталога подключаются только на этой странице через секцию *@
+@section Scripts {
+    <environment include="Development">
+        <script src="~/js/search.js" asp-append-version="true"></script>
+        <script src="~/js/cart.js" asp-append-version="true"></script>
+        <script src="~/js/infinite.js" asp-append-version="true"></script>
+        <script src="~/js/product-modal.js" asp-append-version="true"></script>
+    </environment>
+    <environment exclude="Development">
+        <script src="~/js/catalog.min.js" asp-append-version="true"></script>
+    </environment>
+}
