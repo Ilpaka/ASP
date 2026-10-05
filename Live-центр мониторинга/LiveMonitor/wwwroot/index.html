@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Live-центр мониторинга</title>
+  <link rel="stylesheet" href="css/site.css">
+  <script src="https://cdn.jsdelivr.net/npm/@microsoft/signalr@8.0.7/dist/browser/signalr.min.js" defer></script>
+  <script src="js/app.js" defer></script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a class="brand" href="/"><span class="brand-icon">◉</span><span>Live<span class="brand-muted">Monitor</span></span></a>
+      <div class="header-right"><span class="header-caption">ЦЕНТР МОНИТОРИНГА</span><span id="connectionStatus" class="connection-status connecting"><i></i><span>Подключение…</span></span></div>
+    </div>
+  </header>
+
+  <main class="page">
+    <section class="page-heading">
+      <div><div class="eyebrow">REAL-TIME DASHBOARD <span class="eyebrow-line"></span> SIGNALR</div><h1>Активность в реальном времени</h1><p>Подключения, сообщения и комнаты — все события появляются здесь мгновенно.</p></div>
+      <div class="online-card"><div class="online-icon">⌁</div><div><strong id="onlineCount">0</strong><span>сейчас онлайн</span></div><span class="live-pill"><i></i> LIVE</span></div>
+    </section>
+
+    <section class="main-grid">
+      <div class="left-column">
+        <section class="card feed-card">
+          <div class="card-header"><div><span class="section-kicker">ЛЕНТА СОБЫТИЙ</span><h2>Все события <span class="event-count" id="eventCount">0</span></h2></div><button id="clearFeed" class="subtle-button" type="button" title="Очистить ленту">Очистить ↗</button></div>
+          <div id="eventFeed" class="event-feed" role="log" aria-live="polite" aria-relevant="additions"><div class="feed-empty" id="feedEmpty"><div class="empty-symbol">◎</div><strong>Пока нет событий</strong><span>Подключитесь, отправьте сообщение или войдите в комнату.</span></div></div>
+          <form id="broadcastForm" class="feed-composer"><span class="composer-icon">✦</span><input id="broadcastText" maxlength="500" autocomplete="off" placeholder="Напишите сообщение всем участникам…" aria-label="Сообщение всем"><button class="send-button" type="submit">Отправить <span>↗</span></button></form>
+        </section>
+
+        <section class="card room-card">
+          <div class="card-header compact"><div><span class="section-kicker">ГРУППОВОЕ ОБЩЕНИЕ</span><h2>Комнаты <span class="room-tag" id="currentRoomTag">Не в комнате</span></h2></div><span class="card-decoration">#</span></div>
+          <div class="room-controls"><label for="roomName">НАЗВАНИЕ КОМНАТЫ</label><div class="inline-fields"><input id="roomName" maxlength="40" autocomplete="off" placeholder="Например, alpha"><button id="joinRoom" class="primary-button" type="button">Войти</button><button id="leaveRoom" class="outline-button" type="button">Выйти</button></div></div>
+          <form id="roomForm" class="room-form"><label for="roomText">СООБЩЕНИЕ В КОМНАТУ</label><div class="inline-fields"><input id="roomText" maxlength="500" autocomplete="off" placeholder="Напишите участникам комнаты…"><button class="primary-button" type="submit">Отправить ↗</button></div><div id="typingIndicator" class="typing-indicator" aria-live="polite"></div></form>
+          <div class="helper-text"><span class="helper-dot"></span> Сообщения видят только участники выбранной комнаты</div>
+        </section>
+
+        <section class="card tools-card">
+          <div class="card-header compact"><div><span class="section-kicker">ИНСТРУМЕНТЫ</span><h2>Приватные и внешние сообщения</h2></div></div>
+          <form id="privateForm" class="tool-form"><div class="tool-icon violet">↗</div><div class="tool-content"><h3>Приватное сообщение</h3><p>Выберите участника справа или вставьте его ID</p><div class="inline-fields"><input id="privateTarget" autocomplete="off" placeholder="ID получателя" aria-label="ID получателя"><input id="privateText" maxlength="500" autocomplete="off" placeholder="Текст сообщения" aria-label="Текст приватного сообщения"><button class="primary-button" type="submit">Отправить</button></div></div></form>
+          <div class="tool-divider"></div>
+          <form id="externalRoomForm" class="tool-form"><div class="tool-icon amber">◇</div><div class="tool-content"><h3>Внешнее уведомление в комнату</h3><p>HTTP POST инициирует событие SignalR</p><div class="inline-fields"><input id="externalRoom" maxlength="40" autocomplete="off" placeholder="Название комнаты" aria-label="Название комнаты для уведомления"><input id="externalText" maxlength="500" autocomplete="off" placeholder="Текст уведомления" aria-label="Текст уведомления"><button class="outline-button" type="submit">Уведомить</button></div></div></form>
+          <div class="tool-divider"></div>
+          <div class="tool-form"><div class="tool-icon green">✧</div><div class="tool-content"><h3>Системное сообщение</h3><p>Отправить всем клиентам через HTTP и контекст хаба</p><button id="sendSystem" class="outline-button" type="button">Отправить системное уведомление</button></div></div>
+        </section>
+      </div>
+
+      <aside class="right-column">
+        <section class="card users-card"><div class="card-header compact"><div><span class="section-kicker">ПРИСУТСТВИЕ</span><h2>Участники <span class="event-count" id="userCount">0</span></h2></div><span class="users-icon">♙</span></div><div class="self-id"><span>ВАШ ID ПОДКЛЮЧЕНИЯ</span><div><code id="myConnectionId">Подключение…</code><button id="copyId" type="button" title="Скопировать ID" aria-label="Скопировать ID">⧉</button></div></div><div id="userList" class="user-list"><div class="list-empty">Ожидание участников…</div></div><p class="aside-hint">Нажмите на участника, чтобы отправить ему приватное сообщение.</p></section>
+        <section class="card stream-card"><div class="card-header compact"><div><span class="section-kicker">ПОТОКОВЫЕ ДАННЫЕ</span><h2>Живой поток</h2></div><span class="stream-icon">〰</span></div><p>Случайное число каждые 500 мс через SignalR Streaming.</p><div class="stream-controls"><label for="streamMax">МАКС. ЗНАЧЕНИЕ</label><div class="inline-fields"><input id="streamMax" type="number" min="1" max="1000" value="100"><button id="startStream" class="primary-button" type="button">▶ Старт</button><button id="stopStream" class="outline-button" type="button" disabled>■ Стоп</button></div></div><div id="streamChart" class="stream-chart" aria-label="Последние числа потока"><div class="chart-placeholder">Нажмите «Старт» для просмотра потока</div></div><div class="stream-footer"><span id="streamState"><i></i> Ожидание</span><strong id="lastNumber">—</strong></div></section>
+      </aside>
+    </section>
+  </main>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+</body>
+</html>

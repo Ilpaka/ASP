@@ -1,0 +1,19 @@
+@baseUrl = http://localhost:5080
+
+### Отправить системное сообщение всем подключённым клиентам
+POST {{baseUrl}}/api/notifications/system
+Content-Type: application/json
+
+{ "text": "Проверка системного уведомления" }
+
+### Отправить уведомление только участникам комнаты alpha
+POST {{baseUrl}}/api/notifications/room
+Content-Type: application/json
+
+{ "room": "alpha", "text": "Проверка внешнего уведомления" }
+
+### Отправить сообщение одному подключению — замените ID на показанный на странице
+POST {{baseUrl}}/api/notifications/private
+Content-Type: application/json
+
+{ "connectionId": "ВСТАВЬТЕ_ID", "text": "Личное уведомление из HTTP" }

@@ -1,0 +1,37 @@
+@{ ViewData["Title"] = "Обзор"; }
+
+<section class="welcome-row">
+    <div><div class="eyebrow">ПОНЕДЕЛЬНИК, @DateTime.Now.ToString("dd MMMM yyyy")</div><h1>Обзор показателей</h1><p class="subtitle">Сводная картина работы сервиса за сегодня.</p></div>
+    <div class="refresh-status"><span class="status-dot"></span><span id="lastUpdated">Обновлено только что</span><button class="icon-button" id="refreshButton" aria-label="Обновить данные" title="Обновить данные">↻</button></div>
+</section>
+
+<section class="metric-grid" id="metricsGrid" aria-live="polite" aria-label="Ключевые показатели">
+    <div class="loading-card"><span class="spinner"></span> Загружаем показатели…</div>
+</section>
+
+<section class="content-grid">
+    <article class="panel chart-panel">
+        <div class="panel-heading"><div><div class="eyebrow">ОБЗОР</div><h2>Активность сервиса</h2></div><span class="period-pill">Последние 7 дней <span>⌄</span></span></div>
+        <div class="chart-summary"><strong>8 642</strong><span>событий за неделю</span><span class="trend-pill">↗ 12,8%</span></div>
+        <div class="chart" role="img" aria-label="График активности за семь дней">
+            <div class="chart-y-labels"><span>2 000</span><span>1 500</span><span>1 000</span><span>500</span><span>0</span></div>
+            <div class="chart-area"><div class="grid-line"></div><div class="grid-line"></div><div class="grid-line"></div><div class="grid-line"></div><svg viewBox="0 0 700 210" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="fill" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#7568f5" stop-opacity=".2"/><stop offset="1" stop-color="#7568f5" stop-opacity="0"/></linearGradient></defs><path d="M0 158 C38 150 53 170 100 137 S162 145 200 108 S270 132 300 90 S363 112 400 79 S470 111 500 60 S563 83 600 46 S660 70 700 20 L700 210 L0 210Z" fill="url(#fill)"/><path d="M0 158 C38 150 53 170 100 137 S162 145 200 108 S270 132 300 90 S363 112 400 79 S470 111 500 60 S563 83 600 46 S660 70 700 20" fill="none" stroke="#7568f5" stroke-width="3" vector-effect="non-scaling-stroke"/></svg><div class="chart-x-labels"><span>Пн</span><span>Вт</span><span>Ср</span><span>Чт</span><span>Пт</span><span>Сб</span><span>Вс</span></div></div>
+        </div>
+        <div class="legend"><span><i class="legend-mark purple"></i>Посещения</span><span><i class="legend-mark pale"></i>Заказы</span></div>
+    </article>
+
+    <aside class="panel activity-panel">
+        <div class="panel-heading"><div><div class="eyebrow">ПОСЛЕДНИЕ СОБЫТИЯ</div><h2>Активность</h2></div><button class="text-button" id="activityRefresh">Обновить</button></div>
+        <div id="activityList" class="activity-list" aria-live="polite"><div class="empty-state">Загружаем события…</div></div>
+        <form id="activityForm" class="activity-form" novalidate>
+            <div class="form-heading">Добавить событие <span>POST · JSON</span></div>
+            <label for="activityTitle">Название</label>
+            <input id="activityTitle" name="title" maxlength="80" placeholder="Например, запущена акция" required />
+            <div class="form-row"><label class="sr-only" for="activityCategory">Категория</label><select id="activityCategory" name="category"><option>Сервис</option><option>Продажи</option><option>Каталог</option><option>Клиенты</option></select><button type="submit" class="primary-button" id="submitActivity">Добавить</button></div>
+            <p class="form-message" id="formMessage" role="status"></p>
+        </form>
+    </aside>
+</section>
+<section id="pageMessage" class="page-message" role="status" aria-live="polite"></section>
+
+@section Scripts { <script src="~/js/dashboard.js" asp-append-version="true" defer></script> }

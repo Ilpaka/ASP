@@ -1,0 +1,111 @@
+@baseUrl = http://localhost:5080
+@key = 550e8400-e29b-41d4-a716-446655440000
+
+### Swagger: {{baseUrl}}/swagger
+
+### Seed-проект
+GET {{baseUrl}}/api/projects
+
+### Создать проект — 201 + Location
+POST {{baseUrl}}/api/projects
+Content-Type: application/json
+
+{ "name": "Веб-сайт", "description": "Корпоративный портал" }
+
+### Получить проект
+GET {{baseUrl}}/api/projects/1
+
+### Обновить проект
+PUT {{baseUrl}}/api/projects/1
+Content-Type: application/json
+
+{ "name": "Веб-сайт v2", "description": "Обновлённый портал" }
+
+### Невалидное имя — 400 ValidationProblemDetails
+POST {{baseUrl}}/api/projects
+Content-Type: application/json
+
+{ "name": "", "description": "test" }
+
+### Создать задачу v1, статус по умолчанию ToDo
+POST {{baseUrl}}/api/v1/tasks
+Content-Type: application/json
+
+{ "title": "Сверстать главную", "projectId": 1 }
+
+### Задача v1: Description есть, Priority нет
+GET {{baseUrl}}/api/v1/tasks/1
+
+### Задача v2: Priority есть, Description нет
+GET {{baseUrl}}/api/v2/tasks/1
+
+### PUT без Status — 400
+PUT {{baseUrl}}/api/v1/tasks/1
+Content-Type: application/json
+
+{ "title": "Изменённая задача" }
+
+### Комментарии задачи
+GET {{baseUrl}}/api/tasks/1/comments
+
+### Добавить комментарий
+POST {{baseUrl}}/api/tasks/1/comments
+Content-Type: application/json
+
+{ "content": "Нужно уточнить ТЗ", "authorId": 1 }
+
+### Комментарии отсутствующей задачи — 404 ProblemDetails
+GET {{baseUrl}}/api/tasks/999/comments
+
+### Фильтрация и сортировка
+GET {{baseUrl}}/api/v2/tasks?page=1&pageSize=5&status=InProgress&sortBy=dueDate&sortDir=desc
+
+### Поиск
+GET {{baseUrl}}/api/v2/tasks?page=1&pageSize=10&search=задан
+
+### Слишком большая страница — 400
+GET {{baseUrl}}/api/v2/tasks?page=1&pageSize=100
+
+### POST v2 без ключа — 400 ProblemDetails
+POST {{baseUrl}}/api/v2/tasks
+Content-Type: application/json
+
+{ "title": "Задача без ключа", "priority": "High", "projectId": 1 }
+
+### Первый POST v2 — 201
+POST {{baseUrl}}/api/v2/tasks
+X-Idempotency-Key: {{key}}
+Content-Type: application/json
+
+{ "title": "Новая задача", "priority": "High", "projectId": 1 }
+
+### Повтор: тот же ключ и тело — тот же 201, тот же ID
+POST {{baseUrl}}/api/v2/tasks
+X-Idempotency-Key: {{key}}
+Content-Type: application/json
+
+{ "title": "Новая задача", "priority": "High", "projectId": 1 }
+
+### Тот же ключ, другое тело — 409
+POST {{baseUrl}}/api/v2/tasks
+X-Idempotency-Key: {{key}}
+Content-Type: application/json
+
+{ "title": "Другая задача", "priority": "Low", "projectId": 1 }
+
+### Отсутствующая задача — 404 ProblemDetails
+GET {{baseUrl}}/api/v2/tasks/9999
+
+### Завершить seed-задачу без комментариев — 422 до добавления комментария
+PATCH {{baseUrl}}/api/v2/tasks/1/status
+Content-Type: application/json
+
+{ "status": "Done" }
+
+### CORS preflight с localhost:3000
+OPTIONS {{baseUrl}}/api/v2/tasks
+Origin: http://localhost:3000
+Access-Control-Request-Method: GET
+
+### Удалить проект (и его задачи с комментариями)
+# DELETE {{baseUrl}}/api/projects/1
