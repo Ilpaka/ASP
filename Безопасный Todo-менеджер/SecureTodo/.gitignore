@@ -1,0 +1,5 @@
+bin/
+obj/
+securetodo.db
+securetodo.db-shm
+securetodo.db-wal

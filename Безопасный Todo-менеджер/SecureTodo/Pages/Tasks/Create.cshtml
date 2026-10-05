@@ -1,0 +1,5 @@
+@page "/tasks/create"
+@model SecureTodo.Pages.Tasks.CreateModel
+@{ ViewData["Title"] = "Создать задачу"; }
+<section class="section-head"><div><div class="eyebrow">НОВАЯ ЗАДАЧА</div><h1>Добавить задачу</h1><p>Опишите, что нужно сделать. Задача будет привязана к вашему аккаунту.</p></div></section>
+<div class="card form-card"><form method="post" asp-page="/Tasks/Create"><div asp-validation-summary="ModelOnly" class="validation"></div><label asp-for="Input.Title">Название</label><input asp-for="Input.Title" maxlength="120" placeholder="Например, подготовить презентацию" /><span asp-validation-for="Input.Title" class="validation"></span><label asp-for="Input.Description">Описание</label><textarea asp-for="Input.Description" rows="6" maxlength="2000" placeholder="Детали задачи"></textarea><span asp-validation-for="Input.Description" class="validation"></span><div class="form-actions"><button class="button primary" type="submit">Создать задачу</button><a class="button secondary" asp-page="/Tasks/Index">Отмена</a></div></form></div>

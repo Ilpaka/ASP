@@ -1,0 +1,10 @@
+@page "/account/profile"
+@model SecureTodo.Pages.Account.ProfileModel
+@{ ViewData["Title"] = "Профиль"; }
+<section class="section-head"><div><div class="eyebrow">НАСТРОЙКИ АККАУНТА</div><h1>Профиль и безопасность</h1><p>Дополнительная проверка защитит вход в ваш аккаунт.</p></div></section>
+<div class="card profile-card"><h2>Двухфакторная аутентификация</h2><p>Статус: <strong>@(Model.IsEnabled ? "включена" : "выключена")</strong></p>
+@if (Model.IsEnabled) { <form method="post" asp-page-handler="Disable2fa"><button class="button secondary" type="submit">Отключить 2FA</button></form> }
+else { <form method="post" asp-page-handler="Begin2fa"><button class="button primary" type="submit">Включить 2FA</button></form>
+    @if (!string.IsNullOrEmpty(Model.AuthenticatorKey)) { <div class="setup-box"><h3>Добавьте аккаунт в приложение-аутентификатор</h3><p>Откройте ссылку на телефоне или введите секретный ключ вручную:</p><p><a href="@Model.OtpAuthUri">Открыть otpauth:// ссылку</a></p><code>@Model.AuthenticatorKey</code><form method="post" asp-page-handler="Enable2fa"><label asp-for="Code">Шестизначный код из приложения</label><input asp-for="Code" inputmode="numeric" autocomplete="one-time-code" /><span asp-validation-for="Code" class="validation"></span><button class="button primary" type="submit">Подтвердить и включить</button></form></div> }
+}
+</div>

@@ -1,0 +1,60 @@
+@baseUrl = http://localhost:5082
+@accessToken = ВСТАВЬТЕ_ACCESS_TOKEN_ИЗ_ОТВЕТА_LOGIN
+@refreshToken = ВСТАВЬТЕ_REFRESH_TOKEN_ИЗ_ОТВЕТА_LOGIN
+
+### Вход в API: получите accessToken и refreshToken
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{ "email": "admin@todo.com", "password": "Admin123!" }
+
+### Если у аккаунта включён 2FA, передайте код
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{ "email": "admin@todo.com", "password": "Admin123!", "twoFactorCode": "123456" }
+
+### Без JWT — 401
+GET {{baseUrl}}/api/tasks
+
+### С JWT — задачи текущего пользователя; Admin видит все
+GET {{baseUrl}}/api/tasks
+Authorization: Bearer {{accessToken}}
+
+### Создание: UserId берётся только из JWT
+POST {{baseUrl}}/api/tasks
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{ "title": "Подготовить отчёт", "description": "Сверить цифры", "isCompleted": false, "userId": "чужой-id-игнорируется" }
+
+### Получить задачу
+GET {{baseUrl}}/api/tasks/1
+Authorization: Bearer {{accessToken}}
+
+### Обновить свою задачу (или любую для Admin)
+PUT {{baseUrl}}/api/tasks/1
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{ "title": "Подготовить отчёт v2", "description": "Готово", "isCompleted": true }
+
+### Обновить пару токенов; прежний refresh станет недействительным
+POST {{baseUrl}}/api/auth/refresh
+Content-Type: application/json
+
+{ "refreshToken": "{{refreshToken}}" }
+
+### Отозвать один refresh-токен
+POST {{baseUrl}}/api/auth/logout
+Content-Type: application/json
+
+{ "refreshToken": "{{refreshToken}}" }
+
+### Отозвать все refresh-токены пользователя
+POST {{baseUrl}}/api/auth/logout-all
+Authorization: Bearer {{accessToken}}
+
+### Удалить задачу
+DELETE {{baseUrl}}/api/tasks/1
+Authorization: Bearer {{accessToken}}

@@ -1,0 +1,5 @@
+@page "/tasks/edit/{id:int}"
+@model SecureTodo.Pages.Tasks.EditModel
+@{ ViewData["Title"] = "Редактировать задачу"; }
+<section class="section-head"><div><div class="eyebrow">УПРАВЛЕНИЕ ЗАДАЧЕЙ</div><h1>Редактировать задачу</h1><p>Изменения доступны автору задачи и администратору.</p></div></section>
+<div class="card form-card"><form method="post"><div asp-validation-summary="ModelOnly" class="validation"></div><label asp-for="Input.Title">Название</label><input asp-for="Input.Title" maxlength="120" /><span asp-validation-for="Input.Title" class="validation"></span><label asp-for="Input.Description">Описание</label><textarea asp-for="Input.Description" rows="6" maxlength="2000"></textarea><span asp-validation-for="Input.Description" class="validation"></span><label class="checkbox-row"><input asp-for="Input.IsCompleted" /> Выполнено</label><div class="form-actions"><button class="button primary" type="submit">Сохранить</button><a class="button secondary" asp-page="/Tasks/Index">Отмена</a></div></form></div>

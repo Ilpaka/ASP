@@ -1,0 +1,42 @@
+@inject Microsoft.AspNetCore.Antiforgery.IAntiforgery Antiforgery
+@{
+    var token = Antiforgery.GetAndStoreTokens(Context).RequestToken;
+}
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="csrf-token" content="@token" />
+    <title>@ViewData["Title"] · SecureTodo</title>
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <script src="~/js/tasks.js" asp-append-version="true" defer></script>
+    <script src="~/js/api-client.js" asp-append-version="true" defer></script>
+</head>
+<body>
+    <header class="topbar"><div class="topbar-inner">
+        <a class="brand" asp-page="/Index"><span class="brand-mark">✓</span> Secure<span>Todo</span></a>
+        <nav class="nav">
+            <a asp-page="/Tasks/Index">Задачи</a>
+            @if (User.Identity?.IsAuthenticated == true)
+            {
+                <a asp-page="/Tasks/Create">Создать</a>
+                @if (User.IsInRole("Author") || User.IsInRole("Admin")) { <a asp-page="/Author/Index">Авторам</a> }
+                @if (User.IsInRole("Admin")) { <a asp-page="/Admin/Index">Админ-панель</a> }
+                <a asp-page="/Account/Profile">Профиль</a>
+                <form method="post" asp-page="/Account/Logout"><button class="nav-logout" type="submit">Выйти</button></form>
+            }
+            else
+            {
+                <a asp-page="/Account/Login">Войти</a>
+                <a class="nav-register" asp-page="/Account/Register">Регистрация</a>
+            }
+        </nav>
+    </div></header>
+    <main class="container">
+        @if (TempData["Message"] is string message) { <div class="flash" role="status">@message</div> }
+        @RenderBody()
+    </main>
+    <footer class="footer">Учебная работа · ASP.NET Core Identity · Razor Pages · JWT</footer>
+</body>
+</html>

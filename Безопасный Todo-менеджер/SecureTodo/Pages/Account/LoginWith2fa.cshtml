@@ -1,0 +1,4 @@
+@page "/account/login-2fa"
+@model SecureTodo.Pages.Account.LoginWith2faModel
+@{ ViewData["Title"] = "Подтверждение входа"; }
+<div class="card narrow"><div class="eyebrow">ДОПОЛНИТЕЛЬНАЯ ЗАЩИТА</div><h1>Код подтверждения</h1><p>Введите шесть цифр из приложения-аутентификатора.</p><form method="post" asp-page="/Account/LoginWith2fa"><div asp-validation-summary="ModelOnly" class="validation"></div><label asp-for="Code">Код</label><input asp-for="Code" inputmode="numeric" maxlength="8" autocomplete="one-time-code" placeholder="000000" /><span asp-validation-for="Code" class="validation"></span><button class="button primary full" type="submit">Подтвердить вход</button></form></div>
