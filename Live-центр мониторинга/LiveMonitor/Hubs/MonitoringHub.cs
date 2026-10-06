@@ -74,6 +74,9 @@ public sealed class MonitoringHub(ConnectionRegistry registry) : Hub
         return Clients.OthersInGroup(room).SendAsync("UserTyping", Context.ConnectionId, room);
     }
 
+    public Task TypingGlobal()
+        => Clients.Others.SendAsync("UserTyping", Context.ConnectionId, "");
+
     public async IAsyncEnumerable<int> StreamNumbers(int max,
         [EnumeratorCancellation] CancellationToken cancellationToken)
     {

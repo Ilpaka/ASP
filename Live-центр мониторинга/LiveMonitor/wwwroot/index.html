@@ -28,6 +28,7 @@
           <div class="card-header"><div><span class="section-kicker">ЛЕНТА СОБЫТИЙ</span><h2>Все события <span class="event-count" id="eventCount">0</span></h2></div><button id="clearFeed" class="subtle-button" type="button" title="Очистить ленту">Очистить ↗</button></div>
           <div id="eventFeed" class="event-feed" role="log" aria-live="polite" aria-relevant="additions"><div class="feed-empty" id="feedEmpty"><div class="empty-symbol">◎</div><strong>Пока нет событий</strong><span>Подключитесь, отправьте сообщение или войдите в комнату.</span></div></div>
           <form id="broadcastForm" class="feed-composer"><span class="composer-icon">✦</span><input id="broadcastText" maxlength="500" autocomplete="off" placeholder="Напишите сообщение всем участникам…" aria-label="Сообщение всем"><button class="send-button" type="submit">Отправить <span>↗</span></button></form>
+          <div id="broadcastTypingIndicator" class="typing-indicator broadcast-typing" role="status" aria-live="polite"></div>
         </section>
 
         <section class="card room-card">

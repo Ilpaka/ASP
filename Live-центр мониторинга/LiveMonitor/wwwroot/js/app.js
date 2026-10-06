@@ -19,8 +19,9 @@
   let currentRoom = '';
   let latestUsers = [];
   let eventCount = 0;
-  let typingTimer;
-  let typingDebounce;
+  const typingTimers = new WeakMap();
+  let lastRoomTypingSent = 0;
+  let lastBroadcastTypingSent = 0;
   let toastTimer;
   let streamSubscription;
   let streamValues = [];
@@ -168,11 +169,13 @@
   connection.on('MessageReceived', (senderId, text) => addEvent('broadcast', `Участник ${shortId(senderId)}`, text, 'Всем'));
   connection.on('JoinedRoom', room => {
     currentRoom = room;
+    lastRoomTypingSent = 0;
     showRoom(room);
     addEvent('room', 'Вы вошли в комнату', `Комната «${room}»`, 'Комната');
   });
   connection.on('LeftRoom', room => {
     currentRoom = '';
+    $('typingIndicator').textContent = '';
     showRoom('');
     addEvent('room', 'Вы вышли из комнаты', `Комната «${room}»`, 'Комната');
   });
@@ -184,10 +187,13 @@
   connection.on('PrivateMessageReceived', (senderId, text) => addEvent('private', `От ${shortId(senderId)}`, text, 'Приватное'));
   connection.on('PrivateMessageSent', (recipientId, text) => addEvent('private', `Для ${shortId(recipientId)}`, text, 'Отправлено'));
   connection.on('UserTyping', (senderId, room) => {
-    if (room !== currentRoom) return;
-    $('typingIndicator').textContent = `Пользователь ${shortId(senderId)} печатает…`;
-    clearTimeout(typingTimer);
-    typingTimer = setTimeout(() => $('typingIndicator').textContent = '', 2000);
+    const indicator = room
+      ? (room === currentRoom ? $('typingIndicator') : null)
+      : $('broadcastTypingIndicator');
+    if (!indicator) return;
+    indicator.textContent = `Пользователь ${shortId(senderId)} печатает…`;
+    clearTimeout(typingTimers.get(indicator));
+    typingTimers.set(indicator, setTimeout(() => indicator.textContent = '', 2500));
   });
 
   connection.onreconnecting(() => {
@@ -216,6 +222,14 @@
     if (await invoke('SendMessage', text)) $('broadcastText').value = '';
   });
 
+  $('broadcastText').addEventListener('input', () => {
+    if (!$('broadcastText').value.trim()) return;
+    const now = Date.now();
+    if (now - lastBroadcastTypingSent < 1000) return;
+    lastBroadcastTypingSent = now;
+    void invoke('TypingGlobal');
+  });
+
   $('joinRoom').addEventListener('click', async () => {
     const room = $('roomName').value.trim();
     if (!room) return notify('Введите название комнаты.');
@@ -236,9 +250,11 @@
   });
 
   $('roomText').addEventListener('input', () => {
-    clearTimeout(typingDebounce);
     if (!currentRoom || !$('roomText').value.trim()) return;
-    typingDebounce = setTimeout(() => invoke('Typing', currentRoom), 500);
+    const now = Date.now();
+    if (now - lastRoomTypingSent < 1000) return;
+    lastRoomTypingSent = now;
+    void invoke('Typing', currentRoom);
   });
 
   $('privateForm').addEventListener('submit', async event => {
