@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -6,10 +7,20 @@ using SecureTodo.Data;
 
 namespace SecureTodo.Pages.Tasks;
 
+[Authorize]
 public sealed class IndexModel(AppDbContext db, IAuthorizationService authorization) : PageModel
 {
     public List<TaskItem> Items { get; private set; } = [];
-    public async Task OnGetAsync() => Items = await db.Tasks.AsNoTracking().Include(x => x.User).OrderByDescending(x => x.CreatedAt).ToListAsync();
+    public async Task OnGetAsync()
+    {
+        var query = db.Tasks.AsNoTracking().Include(x => x.User).AsQueryable();
+        if (!User.IsInRole("Admin"))
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            query = query.Where(x => x.UserId == userId);
+        }
+        Items = await query.OrderByDescending(x => x.CreatedAt).ToListAsync();
+    }
 
     public async Task<IActionResult> OnPostCompleteAsync(int id)
     {
