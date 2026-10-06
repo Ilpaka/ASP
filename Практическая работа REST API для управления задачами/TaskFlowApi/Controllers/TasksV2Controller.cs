@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using Asp.Versioning;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -61,7 +62,8 @@ public sealed class TasksV2Controller(AppDbContext db) : ControllerBase
 
     /// <summary>Создаёт задачу v2. Требует заголовок X-Idempotency-Key с GUID.</summary>
     [HttpPost, ProducesResponseType(typeof(TaskItemV2Dto), 201), ProducesResponseType(400), ProducesResponseType(404), ProducesResponseType(409)]
-    public async Task<ActionResult<TaskItemV2Dto>> Create(CreateTaskV2Dto input, CancellationToken ct)
+    public async Task<ActionResult<TaskItemV2Dto>> Create(CreateTaskV2Dto input,
+        [FromHeader(Name = "X-Idempotency-Key"), Required] Guid idempotencyKey, CancellationToken ct)
     {
         if (!await db.Projects.AnyAsync(x => x.Id == input.ProjectId, ct)) throw new NotFoundException("Проект не найден.");
         if (input.AssignedToId is not null && !await db.Users.AnyAsync(x => x.Id == input.AssignedToId, ct))

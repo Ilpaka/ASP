@@ -21,6 +21,7 @@ dotnet run --urls http://localhost:5080
 - `/api/v2/tasks` — контракт v2. Ответ не содержит Description, но содержит Priority.
 - `GET /api/v2/tasks` принимает `page`, `pageSize`, `status`, `priority`, `sortBy`, `sortDir`, `search`.
 - `POST /api/v2/tasks` требует `X-Idempotency-Key` с GUID. Повтор с тем же телом возвращает сохранённые статус, JSON и Location; другой запрос с тем же ключом даёт 409.
+- В Swagger у `POST /api/v2/tasks` есть отдельное поле заголовка `X-Idempotency-Key`. Для каждой новой задачи укажите новый GUID, например `550e8400-e29b-41d4-a716-446655440000`.
 - `PATCH /api/v2/tasks/{id}/status` не позволяет завершить задачу без комментариев: 422 ProblemDetails.
 
 При первом старте создаются проект с ID 1, задача с ID 1 и пользователь `demo` с ID 1. Для добавления комментария используйте `authorId: 1`. Аутентификация в этом учебном задании не требуется; `PasswordHash` присутствует только в модели БД и никогда не входит в DTO.
